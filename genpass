@@ -3,6 +3,7 @@
 # Generate a passphrase using the Diceware Word List
 #
 # http://world.std.com/~reinhold/diceware.html
+# https://github.com/expersso/genpass
 
 # Display usage
 if [[ "$#" -eq 0 || "$1" = "--help" ]]; then
