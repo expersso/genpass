@@ -1,0 +1,75 @@
+#!/bin/bash
+#
+# Generate a passphrase using the Diceware Word List
+#
+# http://world.std.com/~reinhold/diceware.html
+
+# Display usage
+if [[ "$#" -eq 0 || "$1" = "--help" ]]; then
+    cat <<-EOF
+
+    Diceware passphrase generator
+    -----------------------------
+    Usage: genpass [option]
+
+    --download-wordlist         Downloads wordlist to file "dicewarelist" using wget. Can also be
+                                downloaded manually from http://world.std.com/~reinhold/diceware.wordlist.asc
+                                If downloaded manually, just rename it to "dicewarelist" and run then
+                                run --generate-passphrase as described below.
+
+    --generate-passphrase [n]   Generates passphrase of n words (defaults to 5 if no parameter given).
+
+    Recommended usage is to run the --download-wordlist command, then wait for some time before running
+    the --generate-passphrase command (to make sure that somebody monitoring your internet traffic 
+    cannot both know the exact time you downloaded the list and generated the passphrase). Ideally, after
+    downloading the word list, disconnect from the internet while generating the passphrase.
+
+EOF
+    exit 1
+fi
+
+# Download Diceware word list
+if [ $1 =  "--download-wordlist" ]; then
+    wget -nc http://world.std.com/~reinhold/diceware.wordlist.asc -O dicewarelist
+fi
+
+# Generate passphrase
+if [ "$1" = "--generate-passphrase" ]; then
+
+    # Test if Word List has been downloaded
+    if [ ! -e dicewarelist ]; then
+        echo "You need to run 'Diceware --download-wordlist' before generating a passphrase."
+        exit 1
+    fi
+
+    awk -v PHRASELENGTH=$2 '
+
+    BEGIN {
+    # If no phrase length set, defaults to 5 words
+    if(PHRASELENGTH == "")
+        PHRASELENGTH = 5
+
+        # Set random seed based on date and time
+        srand()
+
+        # Roll a set of five dice per specified number of words
+        for(word = 1; word <= PHRASELENGTH; word++) {
+
+            num = ""
+
+            # Roll dice
+            for(i = 1; i <= 5; i++) {
+                roll = 1 + int(rand() * 6)
+                num = num "" roll
+            }
+
+            num += 0
+            arr[num] = word
+        }
+    }
+
+    # Match dice rolls to Diceware word list
+    $1 in arr { printf $2 " " }
+
+    ' dicewarelist
+fi
